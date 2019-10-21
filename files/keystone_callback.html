@@ -1,0 +1,33 @@
+<html>
+<head>
+</head>
+<body>
+</body>
+
+<script type="application/javascript">
+    function postURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const value = urlParams.get('token');
+
+        const form = document.createElement("form");
+        form.action = "https://kaizen.massopen.cloud/dashboard/auth/websso/";
+        form.method = "post";
+        form.name = "sso";
+        form.id = "sso";
+        form.style.display = "none";
+        document.body.appendChild(form);
+
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "token";
+        input.id = "token";
+        input.value = value;
+        form.appendChild(input);
+
+        form.submit();
+    }
+
+    postURL();
+    </script>
+
+</html>

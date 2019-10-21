@@ -9,3 +9,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import logging
+import os
+import time
+
+from keystoneauth1 import session as ks_session
+from selenium import webdriver
+
+from onboarding_tools import settings
+
+
+def test_login(dashboard_session):
+    time.sleep(10)

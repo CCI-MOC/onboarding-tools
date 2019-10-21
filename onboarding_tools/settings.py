@@ -31,3 +31,6 @@ OIDC_CLIENT_ID = os.environ.get('OIDC_CLIENT_ID')
 OIDC_CLIENT_SECRET = os.environ.get('OIDC_CLIENT_SECRET')
 
 TEST_IMPERSONATE_USER = os.environ.get('TEST_IMPERSONATE_USER')
+
+SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+SCRIPT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, '..'))

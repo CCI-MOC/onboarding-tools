@@ -11,6 +11,7 @@
 # limitations under the License.
 
 import json
+import urllib
 
 from onboarding_tools import settings
 
@@ -50,6 +51,32 @@ class KeycloakClient(object):
         auth_url = "https://sso.massopen.cloud/auth/admin/realms/moc/users/%s/impersonation" % user
         return self.session.post(auth_url)
 
+    def impersonate_access_token(self, user):
+        user_session = requests.session()
+        user_session.cookies.update(self.impersonate(user).cookies)
+        auth_url = 'https://sso.massopen.cloud/auth/realms/moc/protocol/openid-connect/auth'
+        params = {
+            'response_mode': 'fragment',
+            'response_type': 'token',
+            'client_id': settings.OIDC_CLIENT_ID,
+            'client_secret': settings.OIDC_CLIENT_SECRET,
+            'redirect_uri': 'https://kaizen.massopen.cloud:13000/',
+        }
+        response = user_session.get(auth_url, params=params, allow_redirects=False)
+        redirect = response.headers['Location']
+        token = urllib.parse.parse_qs(redirect)['access_token'][0]
+        return token
 
-
-
+    def create_user(self, email, first_name, last_name):
+        self._admin_auth()
+        data = {
+            'username': email,
+            'email': email,
+            'firstName': first_name,
+            'lastName': last_name,
+            'enabled': True,
+            'emailVerified': True,
+            'requiredActions': []
+        }
+        return self.session.post('https://sso.massopen.cloud/auth/realms/moc/users',
+                                 json=data)
