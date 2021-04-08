@@ -10,7 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import urllib
 
 from onboarding_tools import settings
@@ -23,6 +22,22 @@ class KeycloakClient(object):
         self.session = requests.session()
         self._admin_auth()
 
+    @staticmethod
+    def construct_url(realm, path):
+        return f'{settings.KEYCLOAK_URL}/auth/admin/realms/{realm}/{path}'
+
+    @property
+    def url_base(self):
+        return f'{settings.KEYCLOAK_URL}/auth/admin/realms'
+
+    @staticmethod
+    def auth_endpoint(realm):
+        return f'{settings.KEYCLOAK_URL}/auth/realms/{realm}/protocol/openid-connect/auth'
+
+    @staticmethod
+    def token_endpoint(realm):
+        return f'{settings.KEYCLOAK_URL}/auth/realms/{realm}/protocol/openid-connect/token'
+
     def _admin_auth(self):
         params = {
             'grant_type': 'password',
@@ -31,38 +46,35 @@ class KeycloakClient(object):
             'password': settings.KEYCLOAK_PASSWORD,
             'scope': 'openid',
         }
-        r = requests.post(settings.KEYCLOAK_TOKEN_URL, data=params)
-        r = json.loads(r.text)
+        r = requests.post(self.token_endpoint('master'), data=params).json()
         headers = {
             'Authorization': ("Bearer %s" % r['access_token']),
             'Content-Type': 'application/json'
         }
         self.session.headers.update(headers)
+        return r
 
-    def get_user_id(self, email):
+    def get_user_id(self, username):
         self._admin_auth()
-        r = self.session.get('https://sso.massopen.cloud/auth/admin/realms/moc/users?email=%s' % email)
-        r = json.loads(r.text)
+        r = self.session.get(self.construct_url('master', f'users?username={username}')).json()
         return r[0]['id']
 
     def impersonate(self, user):
         self._admin_auth()
         user = self.get_user_id(user)
-        auth_url = "https://sso.massopen.cloud/auth/admin/realms/moc/users/%s/impersonation" % user
-        return self.session.post(auth_url)
+        return self.session.post(self.construct_url('master', f'users/{user}/impersonation'))
 
     def impersonate_access_token(self, user):
         user_session = requests.session()
         user_session.cookies.update(self.impersonate(user).cookies)
-        auth_url = 'https://sso.massopen.cloud/auth/realms/moc/protocol/openid-connect/auth'
         params = {
             'response_mode': 'fragment',
             'response_type': 'token',
             'client_id': settings.OIDC_CLIENT_ID,
             'client_secret': settings.OIDC_CLIENT_SECRET,
-            'redirect_uri': 'https://kaizen.massopen.cloud:13000/',
+            'redirect_uri': settings.OPENSTACK_KEYSTONE_URL,
         }
-        response = user_session.get(auth_url, params=params, allow_redirects=False)
+        response = user_session.get(self.auth_endpoint('master'), params=params, allow_redirects=False)
         redirect = response.headers['Location']
         token = urllib.parse.parse_qs(redirect)['access_token'][0]
         return token
@@ -78,5 +90,19 @@ class KeycloakClient(object):
             'emailVerified': True,
             'requiredActions': []
         }
-        return self.session.post('https://sso.massopen.cloud/auth/realms/moc/users',
-                                 json=data)
+        return self.session.post(self.construct_url('users'), json=data)
+
+    def get_client(self, realm, client_id):
+        self._admin_auth()
+        r = self.session.get(f'{self.url_base}/{realm}/clients?clientId={client_id}').json()
+        return r
+
+    def create_client(self, realm, client_id, redirect_uris):
+        self._admin_auth()
+        data = {
+                'clientId': client_id,
+                'secret': 'superspecialsecret',
+                'redirectUris': redirect_uris,
+                'implicitFlowEnabled': True,
+        }
+        return self.session.post(self.construct_url(realm, 'clients'), json=data)
