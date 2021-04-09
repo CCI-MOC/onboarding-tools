@@ -97,11 +97,11 @@ class KeycloakClient(object):
         r = self.session.get(f'{self.url_base}/{realm}/clients?clientId={client_id}').json()
         return r
 
-    def create_client(self, realm, client_id, redirect_uris):
+    def create_client(self, realm, client_id, client_secret, redirect_uris):
         self._admin_auth()
         data = {
                 'clientId': client_id,
-                'secret': 'superspecialsecret',
+                'secret': client_secret,
                 'redirectUris': redirect_uris,
                 'implicitFlowEnabled': True,
         }
