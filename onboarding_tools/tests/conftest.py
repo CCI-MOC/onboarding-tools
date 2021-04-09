@@ -11,6 +11,7 @@
 # limitations under the License.
 
 import os
+from urllib import parse
 
 from adjutantclient.v1 import client as adjutant_client
 from keystoneauth1 import identity
@@ -33,7 +34,7 @@ def sso_session(selenium: webdriver.Remote) -> webdriver.Remote:
         selenium.add_cookie({
             'name': k,
             'value': v,
-            'domain': 'sso.massopen.cloud'
+            'domain': parse.urlparse(settings.KEYCLOAK_URL).netloc.split(':')[0]
         })
     yield selenium
 
