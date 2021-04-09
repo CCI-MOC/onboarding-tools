@@ -45,7 +45,7 @@ def openstack_session() -> ks_session.Session:
     access_token = sso.impersonate_access_token(settings.TEST_IMPERSONATE_USER)
     openstack_auth = identity.v3.OidcAccessToken(
         auth_url=settings.OPENSTACK_KEYSTONE_URL,
-        identity_provider='moc',
+        identity_provider=settings.OPENSTACK_IDP,
         protocol='openid',
         access_token=access_token
     )
@@ -57,9 +57,10 @@ def dashboard_session(
         openstack_session: ks_session.Session,
         selenium: webdriver.Remote) -> webdriver.Remote:
     token = openstack_session.get_token()
+    horizon_endpoint = f'{settings.HORIZON_URL}/auth/websso/'
     selenium.get('file://' + os.path.join(settings.SCRIPT_DIR,
                                           'files',
-                                          'keystone_callback.html?token=%s' % token))
+                                          f'keystone_callback.html?token={token}&action={horizon_endpoint}'))
 
     selenium.implicitly_wait(10)
     selenium.find_element_by_xpath('//*[@id="content_body"]/div[1]/div/div/div[2]/h1')

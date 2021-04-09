@@ -10,7 +10,7 @@
         const value = urlParams.get('token');
 
         const form = document.createElement("form");
-        form.action = "https://onboarding.massopen.cloud/auth/websso/";
+        form.action = urlParams.get("dashboard");
         form.method = "post";
         form.name = "sso";
         form.id = "sso";
