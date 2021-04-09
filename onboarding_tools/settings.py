@@ -13,15 +13,17 @@
 import logging
 import os
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
-KEYCLOAK_TOKEN_URL = os.environ.get('KEYCLOAK_TOKEN_URL')
+KEYCLOAK_URL = os.environ.get('KEYCLOAK_URL')
 KEYCLOAK_USERNAME = os.environ.get('KEYCLOAK_USERNAME')
 KEYCLOAK_PASSWORD = os.environ.get('KEYCLOAK_PASSWORD')
 
 ONBOARDING_UI_PATH = os.environ.get('ONBOARDING_UI_PATH')
 ONBOARDING_UI_VERSION = os.environ.get('ONBOARDING_UI_VERSION')
-ONBOARDING_UI_IMAGE = "massopencloud/horizon-onboarding:r%s" % ONBOARDING_UI_VERSION
+ONBOARDING_UI_IMAGE = "massopencloud/horizon-onboarding:v%s" % ONBOARDING_UI_VERSION
+
+MEMCACHED_VERSION = '1.6-alpine'
 
 HORIZON_URL = os.environ.get('HORIZON_URL')
 OPENSTACK_KEYSTONE_URL = os.environ.get('OPENSTACK_KEYSTONE_URL')

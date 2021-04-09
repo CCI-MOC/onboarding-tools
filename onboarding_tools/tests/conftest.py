@@ -12,6 +12,7 @@
 
 import os
 
+from adjutantclient.v1 import client as adjutant_client
 from keystoneauth1 import identity
 from keystoneauth1 import session as ks_session
 from pytest import fixture
@@ -27,7 +28,7 @@ def sso_session(selenium: webdriver.Remote) -> webdriver.Remote:
     cookies = sso.impersonate(settings.TEST_IMPERSONATE_USER).cookies
     # Note(knikolla): We must open a page in order to set cookies.
     # Doesn't have to exist, but must be in same domain as SSO.
-    selenium.get('https://sso.massopen.cloud/auth/test')
+    selenium.get(f'{settings.KEYCLOAK_URL}/auth/test')
     for k, v in cookies.items():
         selenium.add_cookie({
             'name': k,
@@ -42,12 +43,12 @@ def openstack_session() -> ks_session.Session:
     sso = keycloak.KeycloakClient()
     access_token = sso.impersonate_access_token(settings.TEST_IMPERSONATE_USER)
     openstack_auth = identity.v3.OidcAccessToken(
-        auth_url='https://kaizen.massopen.cloud:13000/v3',
+        auth_url=settings.OPENSTACK_KEYSTONE_URL,
         identity_provider='moc',
         protocol='openid',
         access_token=access_token
     )
-    return ks_session.Session(auth=openstack_auth)
+    yield ks_session.Session(auth=openstack_auth)
 
 
 @fixture()
@@ -58,3 +59,12 @@ def dashboard_session(
     selenium.get('file://' + os.path.join(settings.SCRIPT_DIR,
                                           'files',
                                           'keystone_callback.html?token=%s' % token))
+
+    selenium.implicitly_wait(10)
+    selenium.find_element_by_xpath('//*[@id="content_body"]/div[1]/div/div/div[2]/h1')
+    yield selenium
+
+
+@fixture()
+def adjutant_session(openstack_session) -> adjutant_client.Client:
+    yield adjutant_client.Client(session=openstack_session)

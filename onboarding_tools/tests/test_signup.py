@@ -11,17 +11,22 @@
 # limitations under the License.
 
 import time
+import uuid
 
 from selenium import webdriver
 
+from onboarding_tools import settings
+
 
 def test_signup(sso_session: webdriver.Remote):
-    sso_session.get('https://onboarding.massopen.cloud/signup')
+    project_name = 'automated-test-%s' % uuid.uuid4().hex
+
+    sso_session.get('%s/signup' % settings.HORIZON_URL)
     sso_session.implicitly_wait(10)
 
     # Fill the form
     project_field = sso_session.find_element_by_name('project_name')
-    project_field.send_keys('do-not-approve-automated-test')
+    project_field.send_keys(project_name)
     description_field = sso_session.find_element_by_name('description')
     description_field.send_keys('testing by onboarding-tools')
     organization_field = sso_session.find_element_by_name('organization')
@@ -31,7 +36,7 @@ def test_signup(sso_session: webdriver.Remote):
     phone_field = sso_session.find_element_by_name('phone')
     phone_field.send_keys('555-555-5555')
     moc_contact_field = sso_session.find_element_by_name('moc_contact')
-    moc_contact_field.send_keys('knikolla')
+    moc_contact_field.send_keys('test')
     time.sleep(1)
 
     submit = sso_session.find_element_by_xpath('//*[@id="loginBtn"]')

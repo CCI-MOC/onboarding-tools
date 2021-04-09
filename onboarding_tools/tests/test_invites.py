@@ -10,15 +10,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
-import os
 import time
 
-from keystoneauth1 import session as ks_session
 from selenium import webdriver
 
 from onboarding_tools import settings
 
 
-def test_login(dashboard_session):
+def test_login(dashboard_session: webdriver.Remote):
+    dashboard_session.get('%s/management/project_users/' % settings.HORIZON_URL)
+
+    invite_button = dashboard_session.find_element_by_xpath('//*[@id="users__action_invite"]')
+    invite_button.click()
+
+    email = dashboard_session.find_element_by_name('email')
+    email.send_keys('test_')
+
+    role = dashboard_session.find_element_by_xpath('//*[@id="id_roles_0"]')
+    role.click()
+
     time.sleep(10)
