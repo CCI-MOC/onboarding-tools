@@ -11,22 +11,34 @@
 # limitations under the License.
 
 import time
+import uuid
 
 from selenium import webdriver
 
+from onboarding_tools.tests import base
 from onboarding_tools import settings
 
 
-def test_login(dashboard_session: webdriver.Remote):
-    dashboard_session.get('%s/management/project_users/' % settings.HORIZON_URL)
+class TestInvites(base.TestBase):
 
-    invite_button = dashboard_session.find_element_by_xpath('//*[@id="users__action_invite"]')
-    invite_button.click()
+    def test_invite(self, selenium: webdriver.Remote):
+        invitee = self.setup_user()
 
-    email = dashboard_session.find_element_by_name('email')
-    email.send_keys('test_')
+        dashboard_session = self.get_dashboard_session(selenium)
+        dashboard_session.get(f'{settings.HORIZON_URL}/management/project_users/')
 
-    role = dashboard_session.find_element_by_xpath('//*[@id="id_roles_0"]')
-    role.click()
+        invite_button = dashboard_session.find_element_by_xpath('//*[@id="users__action_invite"]')
+        invite_button.click()
 
-    time.sleep(10)
+        dashboard_session.implicitly_wait(5)
+        email = dashboard_session.find_element_by_name('email')
+        email.send_keys(invitee)
+
+        role = dashboard_session.find_element_by_xpath('//*[@id="id_roles_0"]')
+        role.click()
+
+        submit_button = dashboard_session.find_element_by_xpath('//*[@id="invite_user_form"]/div[2]/button')
+        submit_button.click()
+
+        success = dashboard_session.find_element_by_xpath('//*[@id="main_content"]/div[1]/div/p/strong')
+        assert 'success' in success.text.lower()

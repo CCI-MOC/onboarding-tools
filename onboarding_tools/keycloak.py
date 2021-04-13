@@ -72,14 +72,14 @@ class KeycloakClient(object):
             'response_type': 'token',
             'client_id': settings.OIDC_CLIENT_ID,
             'client_secret': settings.OIDC_CLIENT_SECRET,
-            'redirect_uri': settings.OPENSTACK_KEYSTONE_URL,
+            'redirect_uri': f'{settings.HORIZON_URL}/signup/oidc_redirect_uri',
         }
         response = user_session.get(self.auth_endpoint('master'), params=params, allow_redirects=False)
         redirect = response.headers['Location']
         token = urllib.parse.parse_qs(redirect)['access_token'][0]
         return token
 
-    def create_user(self, email, first_name, last_name):
+    def create_user(self, realm, email, first_name, last_name):
         self._admin_auth()
         data = {
             'username': email,
@@ -90,7 +90,7 @@ class KeycloakClient(object):
             'emailVerified': True,
             'requiredActions': []
         }
-        return self.session.post(self.construct_url('users'), json=data)
+        return self.session.post(self.construct_url(realm, 'users'), json=data)
 
     def get_client(self, realm, client_id):
         self._admin_auth()
