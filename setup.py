@@ -19,7 +19,6 @@ setup(
     packages=['onboarding_tools', 'onboarding_tools.tests'],
     install_requires=[
         'keystoneauth1',
-        'python-adjutantclient',
         'pytest',
         'pytest-selenium',
         'requests',
